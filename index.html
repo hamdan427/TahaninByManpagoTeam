@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="id">
+<head><meta charset="UTF-8" /><meta name="viewport" content="width=device-width, initial-scale=1.0" /><title>TAHANIN</title><link rel="stylesheet" href="styles.css" /></head>
+<body>
+  <div class="app-shell">
+    <header class="topbar"><div class="logo" aria-label="Logo TAHANIN">TH</div><div class="title">TAHANIN</div><div class="subtitle">Tanah ini cocok ditanamin apa?</div></header>
+    <main class="connect-page">
+      <section class="connect-card" id="connectionCard">
+        <div class="wifi-orb"><span></span><span></span><span></span><i></i></div><span class="eyebrow">Perangkat belum tersambung</span><h1>Hubungkan soil tester-mu</h1><p>Nyalakan ESP32, lalu sambungkan perangkat ke jaringan Wi-Fi untuk mulai membaca kondisi tanah.</p>
+        <div class="network-row"><div><strong>TAHANIN by MANPAGO TEAM</strong><small>Perangkat siap dipasangkan</small></div><span class="status-dot"></span></div><label class="esp32-address" for="esp32Address">Alamat ESP32<input id="esp32Address" type="url" inputmode="url" placeholder="http://192.168.4.1" autocomplete="off"></label><button class="continue-button" id="connectButton" type="button">Periksa koneksi ESP32</button><small class="connect-note" id="connectNote">Pastikan laptop tersambung ke Wi-Fi TAHANIN by MANPAGO TEAM.</small>
+      </section>
+      <section class="mode-picker is-hidden" id="modePicker"><span class="eyebrow">Perangkat terhubung</span><h1>Apa yang ingin kamu lakukan?</h1><p>Pilih alur sesuai kebutuhanmu.</p><div class="cards compact-cards"><a class="card" href="analysis.html"><div class="card-icon">⌁</div><div class="card-title">Analisis Tanaman</div><div class="card-text">Dapatkan 5 rekomendasi tanaman yang cocok untuk tanahmu.</div><span class="card-link">Mulai analisis →</span></a><a class="card" href="guide.html"><div class="card-icon">✦</div><div class="card-title">Panduan Tanaman</div><div class="card-text">Temukan panduan perawatan yang sesuai kondisi tanahmu.</div><span class="card-link">Cari panduan →</span></a></div></section>
+    </main><footer class="footer">BY MANPAGO TEAM</footer>
+  </div>
+  <script src="esp32-api.js"></script>
+  <script>
+    const button = document.getElementById('connectButton');
+    const address = document.getElementById('esp32Address');
+    const note = document.getElementById('connectNote');
+    address.value = getEsp32BaseUrl();
+
+    button.addEventListener('click', async () => {
+      try {
+        setEsp32BaseUrl(address.value);
+      } catch (error) {
+        note.textContent = error.message;
+        return;
+      }
+      button.textContent = 'Memeriksa ESP32...';
+      button.disabled = true;
+      note.textContent = 'Menghubungi API ESP32...';
+      try {
+        await checkEsp32();
+        document.getElementById('connectionCard').classList.add('is-hidden');
+        document.getElementById('modePicker').classList.remove('is-hidden');
+      } catch (error) {
+        button.textContent = 'Coba periksa lagi';
+        button.disabled = false;
+        note.textContent = `ESP32 tidak merespons di ${getEsp32BaseUrl()}/api/status. Pastikan alamat IP dan endpoint API benar.`;
+        console.error('Pengecekan ESP32 gagal:', error);
+      }
+    });
+  </script>
+</body>
+</html>

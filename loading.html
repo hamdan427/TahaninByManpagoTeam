@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Memproses | TAHANIN</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="app-frame">
+    <header class="topbar"><a class="logo" href="index.html" aria-label="Kembali">TH</a><div class="title">TAHANIN</div><div class="subtitle">Langkah 3 dari 3</div></header>
+    <main class="loading-page">
+      <div class="loading-visual"><div class="scan-ring"></div><div class="scan-ring ring-two"></div><div class="scan-core">⌁</div></div>
+      <span class="eyebrow">Menganalisis data sensor</span>
+      <h1 id="loadingTitle">Mencocokkan tanaman terbaik</h1>
+      <p id="loadingText">Kami sedang membaca pH, nitrogen, fosfor, dan kalium dari tanahmu.</p>
+      <div class="progress-track"><span id="progressBar"></span></div>
+      <small id="progressNumber">0%</small>
+    </main>
+    <footer class="footer">BY MANPAGO TEAM</footer>
+  </div>
+  <script src="esp32-api.js"></script>
+  <script>
+    const mode = new URLSearchParams(location.search).get('mode') === 'guide' ? 'guide' : 'analysis';
+    const copy = mode === 'guide'
+      ? ['Mencari panduan terbaik', 'Kami sedang menyesuaikan panduan perawatan dengan data tanahmu.']
+      : ['Mencocokkan tanaman terbaik', 'Kami sedang membaca pH, nitrogen, fosfor, dan kalium dari tanahmu.'];
+    const title = document.getElementById('loadingTitle');
+    const text = document.getElementById('loadingText');
+    const bar = document.getElementById('progressBar');
+    const number = document.getElementById('progressNumber');
+    const setProgress = value => { bar.style.width = `${value}%`; number.textContent = `${value}%`; };
+
+    title.textContent = copy[0];
+    text.textContent = 'Masukkan nilai N, P, lalu K pada Serial Monitor ESP32.';
+    setProgress(15);
+
+    waitForEsp32Result(() => {
+      text.textContent = 'Menunggu data NPK dari Serial Monitor...';
+      setProgress(55);
+    }).then(data => {
+      localStorage.setItem('esp32Readings', JSON.stringify(data));
+      setProgress(100);
+      setTimeout(() => { location.href = `result.html?mode=${mode}`; }, 300);
+    }).catch(() => {
+      title.textContent = 'Data NPK belum tersedia';
+      text.textContent = 'Masukkan N, P, dan K di Serial Monitor, lalu pastikan laptop masih tersambung ke Wi-Fi ESP32.';
+      setProgress(0);
+      const retry = document.createElement('a');
+      retry.className = 'continue-button';
+      retry.href = 'index.html';
+      retry.textContent = 'Kembali ke koneksi';
+      document.querySelector('.loading-page').appendChild(retry);
+    });
+  </script>
+</body>
+</html>

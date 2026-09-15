@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Hasil Tanah | TAHANIN</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="app-frame result-frame">
+    <header class="topbar"><a class="logo" href="index.html">TH</a><div class="title" id="resultTopTitle">HASIL ANALISIS</div><div class="subtitle">Data dari TAHANIN-ESP32</div></header>
+    <main class="result-page">
+      <section class="result-intro"><span class="eyebrow" id="resultEyebrow">Analisis selesai</span><h1 id="resultTitle">Tanahmu siap ditanami</h1><p id="resultText">Kondisi tanah terbaca dari sensor ESP32.</p></section>
+      <section class="metric-grid">
+        <article><small>Nitrogen</small><strong id="nitrogenValue">--<span>%</span></strong><div class="meter"><i id="nitrogenMeter" style="width:0%"></i></div><em>Data ESP32</em></article>
+        <article><small>Fosfor</small><strong id="phosphorusValue">--<span>%</span></strong><div class="meter"><i id="phosphorusMeter" style="width:0%"></i></div><em>Data ESP32</em></article>
+        <article><small>Kalium</small><strong id="potassiumValue">--<span>%</span></strong><div class="meter"><i id="potassiumMeter" style="width:0%"></i></div><em>Data ESP32</em></article>
+      </section>
+      <section id="recommendations"><div class="section-heading"><div><span>UNTUK TANAHMU</span><h2>Rekomendasi tanaman</h2></div><button class="filter-button" type="button">Urutkan: cocok</button></div><div class="plant-list" id="plantList"></div></section>
+      <section class="guide-result is-hidden" id="guideResult"><h2>Panduan untuk kondisi tanahmu</h2><div class="guide-steps"><article><b>01</b><div><h3>Perbaiki fosfor</h3><p>Tambahkan kompos matang sebelum penanaman.</p></div></article><article><b>02</b><div><h3>Jaga kelembapan</h3><p>Siram rutin pagi hari, tanpa membuat tanah tergenang.</p></div></article><article><b>03</b><div><h3>Mulai tanam</h3><p>Pilih cabai atau tomat dan beri jarak tanam yang cukup.</p></div></article></div></section>
+    </main>
+    <footer class="footer">BY MANPAGO TEAM</footer>
+  </div>
+  <script>
+    const readings = JSON.parse(localStorage.getItem('esp32Readings') || '{}');
+    [['nitrogen', readings.nitrogen], ['phosphorus', readings.phosphorus], ['potassium', readings.potassium]].forEach(([name, value]) => {
+      if (value === undefined) return;
+      document.getElementById(`${name}Value`).firstChild.textContent = value;
+      document.getElementById(`${name}Meter`).style.width = `${Math.max(0, Math.min(100, Number(value)))}%`;
+    });
+    const plantList = document.getElementById('plantList');
+    const icons = ['☘', '♣', '✿', '❋', '♠'];
+    const avatarClasses = ['leaf', 'sprout', 'herb'];
+    const recommendations = Array.isArray(readings.recommendations) ? readings.recommendations : [];
+    if (recommendations.length) {
+      recommendations.forEach((recommendation, index) => {
+        const item = document.createElement('article');
+        const rank = document.createElement('b');
+        const avatar = document.createElement('div');
+        const content = document.createElement('div');
+        const name = document.createElement('h3');
+        const description = document.createElement('p');
+        const match = document.createElement('span');
+        rank.textContent = String(recommendation.rank || index + 1).padStart(2, '0');
+        avatar.className = `plant-avatar ${avatarClasses[index % avatarClasses.length]}`;
+        avatar.textContent = icons[index % icons.length];
+        name.textContent = recommendation.plant || 'Tanaman tanpa nama';
+        description.textContent = 'Rekomendasi berdasarkan kecocokan data NPK dari ESP32.';
+        match.className = 'match';
+        match.textContent = `${Math.round(Number(recommendation.percentage) || 0)}% cocok`;
+        content.append(name, description);
+        item.append(rank, avatar, content, match);
+        plantList.appendChild(item);
+      });
+    } else {
+      plantList.textContent = 'Belum ada rekomendasi dari ESP32.';
+    }
+    if (new URLSearchParams(location.search).get('mode') === 'guide') {
+      document.getElementById('resultTopTitle').textContent = 'PANDUAN TANAMAN';
+      document.getElementById('resultEyebrow').textContent = 'Panduan ditemukan';
+      document.getElementById('resultTitle').textContent = 'Perawatan yang sesuai untukmu';
+      document.getElementById('resultText').textContent = 'Berikut langkah perawatan berdasarkan kondisi tanah yang terbaca.';
+      document.getElementById('recommendations').classList.add('is-hidden');
+      document.getElementById('guideResult').classList.remove('is-hidden');
+    }
+  </script>
+</body>
+</html>
